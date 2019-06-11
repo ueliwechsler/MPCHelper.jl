@@ -1,0 +1,10 @@
+name = "MPCHelper"
+uuid = "a9b84092-8c14-11e9-198a-3503c202710a"
+authors = ["ueliwechsler <wueli@student.ethz.ch>"]
+version = "0.1.0"
+
+[deps]
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"

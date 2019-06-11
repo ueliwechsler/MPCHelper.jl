@@ -1,5 +1,6 @@
 ## Implementation of the algorithm described in: "Invariant approximation of the minimal robust positively invariant set" S.V.Rakovic
-# Invariant approximations of the minimal robust positively invariant set for 1D? and2D systems
+# Invariant approximations of the minimal robust positively invariant set for and2D systems
+#TODO 1D-systems
 
 # using LinearAlgebra
 # using LazySets
@@ -74,6 +75,25 @@ function F(s::Int64, A::AbstractMatrix, 𝒫::HPolyhedron)
     end
 end
 
+#TODO α and M for Interval type (1D)
+# SinglePoint: A = Interval(0.5,0.5)
+# or Apply just geometric series 1/(1-\rho)
+function F(s::Int64, A::Real, 𝒫::Interval)
+    Aint = Interval(A,A)
+    # As defined in the paper, but different loop
+    if s == 0
+        return Interval(0.0,0.0)
+    else
+        F = 𝒫
+        Ai = Aint
+        for i=1:s-1
+            F += 𝒫*Ai
+            Ai = Ai*Aint
+        end
+        return F
+    end
+end
+
 
 """
     approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolyhedron;
@@ -93,5 +113,48 @@ function approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolyhedron;
     lazyF_infty = (1 - α)*Fs # lazy (symoblic) approximative mRPI-set
     # Return the lazy (symbolic) set or an HPolygon
     (isLazy) && return lazyF_infty
-    return overapproximate(lazyF_infty, err_approx)
+    return overapproximate(lazyF_infty, err_approx) #overapproximate only works for 2D
 end
+
+function approx_mRPI(s::Int, A::Real, 𝒲::Interval)
+    return F(s, A, 𝒲)
+end
+
+
+
+
+# use https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Minimal%20Robust%20Positively%20Invariant%20Set.ipynb for 3D and more!
+
+# W = polyhedron(Wv, CDDLib.Library())
+
+# using Polyhedra
+# Wv = vrep([[x, y] for x in [-1.0, 1.0] for y in [-1.0, 1.0]])
+# W = polyhedron(Wv)
+#
+# function vertices_to_polhedron(x_vec,y_vec)
+#     Wv = vrep([[x, y] for x in x_vec for y in y_vec])
+#     W = polyhedron(Wv)
+# end
+#
+# function vertices_to_polhedron(x_vec,y_vec, z_vec)
+#     Wv = vrep([[x, y,z] for x in x_vec for y in y_vec for z in z_vec])
+#     W = polyhedron(Wv)
+# end
+#
+# function Fs(s::Integer, verbose=1)
+#     @assert s ≥ 1
+#     F = W
+#     A_W = W
+#     for i in 1:(s-1)
+#         A_W = A * A_W
+#         F += A_W
+#         if verbose ≥ 1
+#             println("Number of points after adding A^$i * W: ", npoints(F))
+#         end
+#         removevredundancy!(F)
+#         if verbose ≥ 1
+#             println("Number of points after removing redundant ones: ", npoints(F))
+#         end
+#     end
+#     return F
+# end

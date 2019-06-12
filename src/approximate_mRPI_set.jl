@@ -2,10 +2,10 @@
 # Invariant approximations of the minimal robust positively invariant set for and2D systems
 #TODO 1D-systems
 
-# using LinearAlgebra
-# using LazySets
-# using Polyhedra
-# import LazySets.Approximations.overapproximate
+using LinearAlgebra
+using LazySets
+using Polyhedra
+import LazySets.Approximations.overapproximate
 
 """ Pontryagin Set Difference for HPolyhedron and HPolygon
     From Theory and Computation of Disturbance Invariant Sets for discrete time
@@ -120,10 +120,7 @@ function approx_mRPI(s::Int, A::Real, 𝒲::Interval)
     return F(s, A, 𝒲)
 end
 
-
-
-
-# use https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Minimal%20Robust%20Positively%20Invariant%20Set.ipynb for 3D and more!
+## use https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Minimal%20Robust%20Positively%20Invariant%20Set.ipynb for 3D and more!
 
 # W = polyhedron(Wv, CDDLib.Library())
 

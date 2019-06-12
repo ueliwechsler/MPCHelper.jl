@@ -1,5 +1,7 @@
 
-# if m=n=w=1, i.e. 1-Dimensional system
+## Compute tightened Sets using mRPI Ω
+
+# if m=n=w=1, i.e. 1-D Linear system
 function compute_tightened_sets(A::Real, B::Real, K::Real, 𝒲::Interval, 𝕏::Interval, 𝕌::Interval; s=100)
     A_stab = A + B*K  #eigvals(A_stab)
     K = Interval(K,K)

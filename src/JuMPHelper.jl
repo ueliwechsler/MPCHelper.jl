@@ -10,13 +10,23 @@ function constrain_variable_by_set!(model::Model, x::AbstractArray{VariableRef,2
     end
 end
 
-function constrain_variable_by_set!(model::Model, x::AbstractArray{VariableRef},
+# function constrain_variable_by_set!(model::Model, x::AbstractArray{VariableRef},
+#                                     𝒳::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}})
+#     N = size(x,2)
+#     a = [1.0, -1.0]
+#     b = [𝒳.dat.hi, -𝒳.dat.lo]
+#     for j=0:N-1
+#         @constraint(model, [i=1:2], a[i]'*x[1, j] <= b[i])
+#     end
+# end
+
+function constrain_variable_by_set!(model::Model, x::AbstractVector{VariableRef},
                                     𝒳::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}})
-    N = size(x,2)
+    N = length(x)
     a = [1.0, -1.0]
     b = [𝒳.dat.hi, -𝒳.dat.lo]
     for j=0:N-1
-        @constraint(model, [i=1:2], a[i]'*x[1, j] <= b[i])
+        @constraint(model, [i=1:2], a[i]'*x[j] <= b[i])
     end
 end
 
@@ -36,3 +46,13 @@ function nonlin_opt_okay(model::Model)
     end
     nothing
 end
+
+function get_ineq_constr(model::Model)
+    return all_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.LessThan{Float64})
+end
+
+function get_eq_constr(model::Model)
+    return all_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64})
+end
+
+# list_of_constraint_types(model)

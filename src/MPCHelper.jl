@@ -1,5 +1,8 @@
 module MPCHelper
 
+DIR = @__DIR__
+@show DIR
+
 using JuMP
 using LinearAlgebra
 using LazySets
@@ -14,6 +17,7 @@ include("approximate_mRPI_set.jl")
 include("set_calculations_for_MPC.jl")
 include("analytic_solution_lmax.jl")
 include("PlotHelper.jl")
+include("MatlabHelper.jl")
 
 # copied functionalities
 # include("ControlSystem.jl")
@@ -29,6 +33,7 @@ export constrain_variable_by_set!
 export plot_lin_contour!, plot_vec!
 # analytic_solution_lmax
 export lmax_mask, ω_opt, hΩ_opt, get_Ellipsoid
-
+# MatlabHelper
+export eye
 
 end # module

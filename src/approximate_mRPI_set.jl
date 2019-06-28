@@ -5,15 +5,15 @@
 using LinearAlgebra
 using LazySets
 using Polyhedra
-import LazySets.Approximations.overapproximate
+using LazySets.Approximations # overapproximate, SphericalDirections
 
 """ Pontryagin Set Difference for HPolyhedron and HPolygon
     From Theory and Computation of Disturbance Invariant Sets for discrete time
     linear systems https://www.hindawi.com/journals/mpe/1998/934097/abs/"""
-Base.:-(X::HPolyhedron, Y::HPolygon) = begin
+Base.:-(X::HPolytope, Y::HPolytope) = begin
     ax, bx, n = get_constraints(X)
     b_xminusy = bx .- ρ.(ax,Ref(Y))
-    XminusY = HPolyhedron(vcat(ax'...), b_xminusy)
+    XminusY = HPolytope(vcat(ax'...), b_xminusy)
     return XminusY
 end
 
@@ -26,14 +26,15 @@ Base.:-(a::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}},
 end
 
 function get_constraints(𝒫::AbstractPolyhedron)
-    a = getfield.(𝒫.constraints,:a) # normal vector of halfspace
-    b = getfield.(𝒫.constraints,:b) # support value of halfspace
+    # not all AbstractPolyhedron have 𝒫.constraints => constraints_list
+    a = getfield.(constraints_list(𝒫),:a) # normal vector of halfspace
+    b = getfield.(constraints_list(𝒫),:b) # support value of halfspace
     n = length(𝒫.constraints)
     return a,b, n
 end
 
 """ Equation (11) """
-function αᴼ(s::Int64, A::AbstractMatrix, 𝒫::HPolyhedron)
+function αᴼ(s::Int64, A::AbstractMatrix, 𝒫::HPolytope)
     a, b, n_halfspaces = get_constraints(𝒫)
     hw_vec = zeros(n_halfspaces)
     for i=1:n_halfspaces
@@ -44,7 +45,7 @@ end
 
 ## Approximation to Invariant Set
 """  Equation (13) """
-function M(s::Int64, A::AbstractMatrix, 𝒫::HPolyhedron)
+function M(s::Int64, A::AbstractMatrix, 𝒫::HPolytope)
     n = size(A, 2)
     E = Matrix{Float64}(I, n, n)
     hw_vec = zeros(n,2)
@@ -62,7 +63,9 @@ function M(s::Int64, A::AbstractMatrix, 𝒫::HPolyhedron)
     return maximum(hw_vec)
 end
 
-function F(s::Int64, A::AbstractMatrix, 𝒫::HPolyhedron)
+# linear_map(A, P) is efficient, if A is invertible, since it does not have to convert
+# to V-Representation!
+function F(s::Int64, A::AbstractMatrix, 𝒫::HPolytope)
     # As defined in the paper, but different loop
     if s == 0
         return Ball2(zeros(size(A,1)), 0.0)
@@ -94,13 +97,13 @@ function F(s::Int64, A::Real, 𝒫::Interval)
     end
 end
 
-
+# The overapproximate case only works in the case of a HPolygon!
 """
     approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolyhedron;
                 err_approx::Float64=1e-5, isLazy::Bool=false)
 
 Calculate approximative mRPI set according to "Invariant Approximation of the mRPI set" by Rakovic et all."""
-function approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolyhedron;
+function approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolygon;
                     err_approx::Float64=1e-5, isLazy::Bool=false)
     s = 0; α = 1; m = 1
     while α > ϵ/(ϵ + m)
@@ -115,6 +118,25 @@ function approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolyhedron;
     (isLazy) && return lazyF_infty
     return overapproximate(lazyF_infty, err_approx) #overapproximate only works for 2D
 end
+
+# Only works for 3D 🙈
+function approx_mRPI(ϵ::Float64, A::AbstractMatrix, 𝒲::HPolytope;
+                    n_dirs::Int=10, isLazy::Bool=false)
+    s = 0; α = 1; m = 1
+    while α > ϵ/(ϵ + m)
+        s += 1
+        α = αᴼ(s, A, 𝒲)
+        m = M(s, A, 𝒲)
+    end
+    Fs = F(s, A, 𝒲)
+    @show s, α
+    lazyF_infty = (1 - α)*Fs # lazy (symoblic) approximative mRPI-set
+    # Return the lazy (symbolic) set or an HPolygon
+    (isLazy) && return lazyF_infty
+    dirs = SphericalDirections(n_dirs, n_dirs)
+    return overapproximate(lazyF_infty, dirs)
+end
+
 
 function approx_mRPI(s::Int, A::Real, 𝒲::Interval)
     return F(s, A, 𝒲)

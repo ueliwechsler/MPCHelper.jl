@@ -12,9 +12,8 @@ using Test
 
 using Plots
 
-# Initializatoin ---------------------------------------------------------------
-
-## Linear 2D System
+## Initialization ---------------------------------------------------------------
+# Linear 2D System
 A = [1 -2; 0 1]
 B= Matrix([1 1]')
 R = 0.1*I
@@ -78,3 +77,28 @@ ylims!(-5,5)
 grid_res = 0:0.1:10
 surface(grid_res,grid_res, (x,y) -> lmax([x,y],0) )
 surface!(grid_res,grid_res, (x,y) -> l([x,y],0))
+
+
+## Solve OP for lmax and compare to analytical solution
+using JuMP
+using Ipopt
+import LazySets.Approximations.overapproximate
+n = size(A,2)
+
+function lmax_optimized(z,v)
+    HPolyrep_epsilon = overapproximate(E, 1e-5) # approximate ellipse by polytope
+    model = Model(with_optimizer(Ipopt.Optimizer))
+    JuMP.register(model, :l, 2, l, autodiff=true )
+    @variable(model, ω[1:n])
+    constrain_variable_by_set2!(model, ω, HPolyrep_epsilon)
+    @objective(model, Max, l(z+ω, K*ω .+ v))
+    # print(model)
+    optimize!(model)
+    opt_val = objective_value(model)
+    opt_ω = value.(ω)
+    @show opt_ω, opt_val
+    return opt_val
+end
+
+lmax_optimized(z,v) - lmax(z,v)
+@test abs(lmax_optimized(z,v) - lmax(z,v)) <= 1e-4

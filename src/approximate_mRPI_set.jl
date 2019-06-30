@@ -7,7 +7,7 @@ using LazySets
 using Polyhedra
 using LazySets.Approximations # overapproximate, SphericalDirections
 
-""" Pontryagin Set Difference for HPolyhedron and HPolygon
+""" Pontryagin Set Difference for HPolytope and HPolygon
     From Theory and Computation of Disturbance Invariant Sets for discrete time
     linear systems https://www.hindawi.com/journals/mpe/1998/934097/abs/"""
 Base.:-(X::HPolytope, Y::HPolytope) = begin
@@ -17,12 +17,29 @@ Base.:-(X::HPolytope, Y::HPolytope) = begin
     return XminusY
 end
 
+Base.:-(X::AbstractPolytope, Y::AbstractPolytope) = begin
+    ax, bx, n = get_constraints(X)
+    b_xminusy = bx .- ρ.(ax,Ref(Y))
+    XminusY = HPolytope(vcat(ax'...), b_xminusy)
+    return XminusY
+end
+
+
 """ Pontryagin Set Difference for two Interval from IntervalArithmetic"""
 Base.:-(a::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}},
         b::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}}) = begin
     low = a.dat.lo - b.dat.lo
     high = a.dat.hi - b.dat.hi
     return LazySets.Interval(low, high)
+end
+
+function get_support(P::AbstractPolytope, dims)
+    x = Vector{Tuple{Float64,Float64}}(undef,dims)
+    E = Matrix(I,dims,dims)
+    for i=1:dims
+        x[i] = (-ρ(-e(i,dims), P), ρ(e(i,dims), P))
+    end
+    return x
 end
 
 function get_constraints(𝒫::AbstractPolyhedron)

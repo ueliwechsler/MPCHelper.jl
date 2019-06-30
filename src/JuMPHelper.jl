@@ -19,9 +19,16 @@ function add_constraint!(m::Model, x::AbstractVector{VariableRef}, 𝒳::Abstrac
 end
 
 # x ∈ ℝⁿ and 𝒳 = 𝓍 ∈ ℝⁿ
-function add_constraint!(m::Model, x::AbstractVector{VariableRef}, 𝓍::AbstractVector)
+function add_constraint!(m::Model, x, 𝓍::AbstractVector)
     n = length(𝓍)
     @constraint(m, [i=1:n], x[i] == 𝓍[i])
+end
+
+# x ∈ ℝⁿ and 𝒳 = 𝓍 ± ϵ ∈ ℝⁿ (relaxed terminal constraint)
+function add_constraint!(m::Model, x, 𝓍::AbstractVector, ϵ=1e-5)
+    n = length(𝓍)
+    @constraint(m, [i=1:n], x[i] <= 𝓍[i] + ϵ)
+    @constraint(m, [i=1:n], x[i] <= 𝓍[i] - ϵ)
 end
 
 # TODO: make it a macro! such that the constr name can be added to the constraint

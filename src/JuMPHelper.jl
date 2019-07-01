@@ -26,9 +26,8 @@ function add_constraint!(m::Model, x, 𝓍::AbstractVector)
 end
 
 # Used for Array{VariableRef, 2} ========================================
-
 # x ∈ ℝⁿ and 𝒳 = 𝓍 ∈ ℝⁿ
-function add_constraint!(m::Model, x, 𝓍::AbstractVector)
+function add_constraint!(m::Model, x::Vector{VariableRef}, 𝓍::AbstractVector)
     n = length(𝓍)
     @constraint(m, x .== 𝓍)
 end

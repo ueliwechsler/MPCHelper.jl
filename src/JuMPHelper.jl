@@ -5,7 +5,7 @@
 
 # Used for DenseAxisArray ========================================
 # x ∈ ℝn×N+1 and 𝒳 ⊂ ℝⁿ
-function add_constraint!(m::Model, x::DenseAxisArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
+function add_constraint!(m::Model, x::AbstractArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
     a, b, s = get_constraints(𝒳)
     N = size(x,2)-1 # Since the first element of the JumpVariable is 0
     for j=0:N
@@ -32,7 +32,7 @@ function add_constraint!(m::Model, x::Vector{VariableRef}, 𝓍::AbstractVector{
     @constraint(m, x .== 𝓍)
 end
 
-function add_constraint!(m::Model, x::AbstractArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
+function add_constraint!(m::Model, x::Array{VariableRef,2}, 𝒳::AbstractPolyhedron)
     a, b, s = get_constraints(𝒳)
     N = size(x,2) # Since, here, the first element of the JumpVariable is 1
     for j=1:N

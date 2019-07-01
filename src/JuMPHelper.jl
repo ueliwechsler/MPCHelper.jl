@@ -5,7 +5,7 @@
 
 # Used for DenseAxisArray ========================================
 # x ∈ ℝn×N+1 and 𝒳 ⊂ ℝⁿ
-function add_constraint!(m::Model, x::AbstractArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
+function add_constraint!(m::Model, x::DenseAxisArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
     a, b, s = get_constraints(𝒳)
     N = size(x,2)-1 # Since the first element of the JumpVariable is 0
     for j=0:N
@@ -20,16 +20,24 @@ function add_constraint!(m::Model, x::AbstractVector{VariableRef}, 𝒳::Abstrac
 end
 
 # x ∈ ℝⁿ and 𝒳 = 𝓍 ∈ ℝⁿ
-function add_constraint!(m::Model, x, 𝓍::AbstractVector)
+function add_constraint!(m::Model, x, 𝓍::AbstractVector{<:Real})
     n = length(𝓍)
     @constraint(m, [i=1:n], x[i] == 𝓍[i])
 end
 
 # Used for Array{VariableRef, 2} ========================================
 # x ∈ ℝⁿ and 𝒳 = 𝓍 ∈ ℝⁿ
-function add_constraint!(m::Model, x::Vector{VariableRef}, 𝓍::AbstractVector)
+function add_constraint!(m::Model, x::Vector{VariableRef}, 𝓍::AbstractVector{<:Real})
     n = length(𝓍)
     @constraint(m, x .== 𝓍)
+end
+
+function add_constraint!(m::Model, x::AbstractArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
+    a, b, s = get_constraints(𝒳)
+    N = size(x,2) # Since, here, the first element of the JumpVariable is 1
+    for j=1:N
+        @constraint(m, [i=1:s], a[i]'*x[:, j] <= b[i])
+    end
 end
 
 # # x ∈ ℝⁿ and 𝒳 = 𝓍 ± ϵ ∈ ℝⁿ (relaxed terminal constraint)

@@ -26,20 +26,6 @@ function add_constraint!(m::Model, x, 𝓍::AbstractVector)
 end
 
 # Used for Array{VariableRef, 2} ========================================
-# x ∈ ℝn×N+1 and 𝒳 ⊂ ℝⁿ
-function add_constraint!(m::Model, x::Array{VariableRef,2}, 𝒳::AbstractPolyhedron)
-    a, b, s = get_constraints(𝒳)
-    N = size(x,2)-1 # Since the first element of the JumpVariable is 0
-    for j=0:N
-        @constraint(m, a'*x[:, j] <= b)
-    end
-end
-
-# x ∈ ℝⁿ and 𝒳 ⊂ ℝⁿ
-function add_constraint!(m::Model, x::Array{VariableRef}, 𝒳::AbstractPolyhedron)
-    a, b, s = get_constraints(𝒳)
-    @constraint(m, a'*x <= b)
-end
 
 # x ∈ ℝⁿ and 𝒳 = 𝓍 ∈ ℝⁿ
 function add_constraint!(m::Model, x, 𝓍::AbstractVector)
@@ -54,24 +40,24 @@ end
 #     @constraint(m, [i=1:n], x[i] <= 𝓍[i] - ϵ)
 # end
 
-# TODO: make it a macro! such that the constr name can be added to the constraint
-function constrain_variable_by_set!(model::Model, x::AbstractVector{VariableRef},
-                                    𝒳::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}})
-    N = length(x)
-    a = [1.0, -1.0]
-    b = [𝒳.dat.hi, -𝒳.dat.lo]
-    for j=0:N-1
-        @constraint(model, [i=1:2], a[i]'*x[j] <= b[i])
-    end
-end
-
-# 1D variable x and 1D Interval set 𝒳
-function constrain_variable_by_set!(model::Model, x::VariableRef,
-                                    𝒳::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}})
-    a = [1.0, -1.0]
-    b = [𝒳.dat.hi, -𝒳.dat.lo]
-    @constraint(model, [i=1:2], a[i]'*x <= b[i])
-end
+# # TODO: make it a macro! such that the constr name can be added to the constraint
+# function constrain_variable_by_set!(model::Model, x::AbstractVector{VariableRef},
+#                                     𝒳::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}})
+#     N = length(x)
+#     a = [1.0, -1.0]
+#     b = [𝒳.dat.hi, -𝒳.dat.lo]
+#     for j=0:N-1
+#         @constraint(model, [i=1:2], a[i]'*x[j] <= b[i])
+#     end
+# end
+#
+# # 1D variable x and 1D Interval set 𝒳
+# function constrain_variable_by_set!(model::Model, x::VariableRef,
+#                                     𝒳::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}})
+#     a = [1.0, -1.0]
+#     b = [𝒳.dat.hi, -𝒳.dat.lo]
+#     @constraint(model, [i=1:2], a[i]'*x <= b[i])
+# end
 
 """ Checks JuMP.MOI.TerminationStatusCode """
 function nonlin_opt_okay(model::Model)

@@ -3,6 +3,7 @@
 #TODO: You could use Polyhedra to get the feasible set (poly = polyhedron(m) m=Model())
 #TODO: Naming of the constraints => in order to have better debugging
 
+# Used for DenseAxisArray ========================================
 # x ∈ ℝn×N+1 and 𝒳 ⊂ ℝⁿ
 function add_constraint!(m::Model, x::AbstractArray{VariableRef,2}, 𝒳::AbstractPolyhedron)
     a, b, s = get_constraints(𝒳)
@@ -24,12 +25,34 @@ function add_constraint!(m::Model, x, 𝓍::AbstractVector)
     @constraint(m, [i=1:n], x[i] == 𝓍[i])
 end
 
-# x ∈ ℝⁿ and 𝒳 = 𝓍 ± ϵ ∈ ℝⁿ (relaxed terminal constraint)
-function add_constraint!(m::Model, x, 𝓍::AbstractVector, ϵ=1e-5)
-    n = length(𝓍)
-    @constraint(m, [i=1:n], x[i] <= 𝓍[i] + ϵ)
-    @constraint(m, [i=1:n], x[i] <= 𝓍[i] - ϵ)
+# Used for Array{VariableRef, 2} ========================================
+# x ∈ ℝn×N+1 and 𝒳 ⊂ ℝⁿ
+function add_constraint!(m::Model, x::Array{VariableRef,2}, 𝒳::AbstractPolyhedron)
+    a, b, s = get_constraints(𝒳)
+    N = size(x,2)-1 # Since the first element of the JumpVariable is 0
+    for j=0:N
+        @constraint(m, a'*x[:, j] <= b)
+    end
 end
+
+# x ∈ ℝⁿ and 𝒳 ⊂ ℝⁿ
+function add_constraint!(m::Model, x::Array{VariableRef}, 𝒳::AbstractPolyhedron)
+    a, b, s = get_constraints(𝒳)
+    @constraint(m, a'*x <= b)
+end
+
+# x ∈ ℝⁿ and 𝒳 = 𝓍 ∈ ℝⁿ
+function add_constraint!(m::Model, x, 𝓍::AbstractVector)
+    n = length(𝓍)
+    @constraint(m, x .== 𝓍)
+end
+
+# # x ∈ ℝⁿ and 𝒳 = 𝓍 ± ϵ ∈ ℝⁿ (relaxed terminal constraint)
+# function add_constraint!(m::Model, x, 𝓍::AbstractVector, ϵ=1e-5)
+#     n = length(𝓍)
+#     @constraint(m, [i=1:n], x[i] <= 𝓍[i] + ϵ)
+#     @constraint(m, [i=1:n], x[i] <= 𝓍[i] - ϵ)
+# end
 
 # TODO: make it a macro! such that the constr name can be added to the constraint
 function constrain_variable_by_set!(model::Model, x::AbstractVector{VariableRef},

@@ -33,7 +33,8 @@ Base.:-(a::Interval{Float64,LazySets.IntervalArithmetic.Interval{Float64}},
     return LazySets.Interval(low, high)
 end
 
-function get_support(P::AbstractPolytope, dims)
+function get_support(P::AbstractPolytope)
+    dims = LazySets.dim(P)
     x = Vector{Tuple{Float64,Float64}}(undef,dims)
     E = Matrix(I,dims,dims)
     for i=1:dims
